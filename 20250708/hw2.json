@@ -1,0 +1,34 @@
+{
+    "簡單": [
+        {
+            "name": "小明",
+            "age": 18,
+            "isstudent": true
+        }
+    ],
+    "複雜": [
+        {
+            "class": "AI二甲",
+            "teacher": "徐老師",
+            "email": "XXXXXXX",
+            "student": [
+                {
+                    "name": "小明",
+                    "age": 16,
+                    "s": {
+                        "math": 90,
+                        "English": 85
+                    }
+                },
+                {
+                    "name": "小華",
+                    "age": 17,
+                    "s": {
+                        "math": 95,
+                        "English": 88
+                    }
+                }
+            ]
+        }
+    ]
+}

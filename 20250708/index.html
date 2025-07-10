@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript 天氣查詢</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #weather-info {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>JavaScript 天氣查詢</h1>
+
+    <input type="text" id="cityInput" placeholder="請輸入城市名稱 (例如: Taipei)">
+    <button id="searchBtn">查詢天氣</button>
+
+    <div id="weather-info">
+        <p>點擊「查詢天氣」按鈕獲取資訊。</p>
+    </div>
+
+    <script>
+        document.getElementById('searchBtn').onclick = async () => { //
+            const city = document.getElementById('cityInput').value; // 獲取輸入的城市名稱
+            if (!city) {
+                alert('請輸入城市名稱！');
+                return;
+            }
+
+            const API_KEY = 'abe5e68b31b49e1715fca1d3fcd3655e'; // 請替換成您的 OpenWeatherMap API Key
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric`; //
+
+            const weatherInfoDiv = document.getElementById('weather-info');
+            weatherInfoDiv.innerHTML = '<p>載入中...</p>'; // 顯示載入狀態
+
+            try {
+                const response = await fetch(url); // 發送非同步請求，等待回應
+                const data = await response.json(); // 將回應解析為 JSON 格式，等待解析完成
+
+                if (response.ok) { // 檢查 HTTP 狀態碼是否成功 (2xx)
+                    const cityName = data.name; //
+                    const temperature = data.main.temp; //
+                    const description = data.weather[0].description; //
+
+                    weatherInfoDiv.innerHTML = `
+                        <h3>${cityName} 的天氣</h3>
+                        <p>溫度: ${temperature}°C</p>
+                        <p>狀態: ${description}</p>
+                    `; // 動態更新網頁內容
+                } else {
+                    // 處理 API 返回的錯誤訊息 (例如城市不存在)
+                    let errorMessage = '查詢失敗，請檢查城市名稱。'; //
+                    if (data && data.message) {
+                        errorMessage += ` 錯誤訊息: ${data.message}`;
+                    }
+                    weatherInfoDiv.innerHTML = `<p class="error">${errorMessage}</p>`;
+                    console.error('API 錯誤:', data);
+                }
+
+            } catch (error) {
+                console.error('網路或解析錯誤:', error); //
+                weatherInfoDiv.innerHTML = '<p class="error">發生錯誤，無法查詢天氣。</p>'; //
+                alert('查詢失敗，請檢查網路連線或稍後再試。'); //
+            }
+        };
+    </script>
+</body>
+
+</html>

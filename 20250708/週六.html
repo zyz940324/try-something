@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <title>🌤️ 天氣查詢系統</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #c2e9fb, #81a4fd);
+      padding: 30px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 30px;
+    }
+
+    .search-box {
+      text-align: center;
+    }
+
+    input[type="text"] {
+      padding: 10px;
+      width: 250px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      margin-left: 10px;
+      border: none;
+      border-radius: 8px;
+      background-color: #4a90e2;
+      color: white;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 30px;
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #ccc;
+      font-size: 18px;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🌍 查詢城市天氣</h2>
+  <div class="search-box">
+    <input type="text" id="cityInput" placeholder="請輸入城市名稱">
+    <button id="searchBtn">查詢</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('searchBtn').onclick = async () => {
+      const city = document.getElementById('cityInput').value.trim();
+      const API_KEY = '5fd620cd38c1a177907993ad16916df9'; // << 替換為你自己的 API KEY
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = ''; // 清空結果區
+
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("找不到城市");
+
+        const data = await res.json();
+
+        const html = `
+          <h3>${data.name} 的天氣資訊</h3>
+          <table>
+            <tr><td>🌡️ 溫度</td><td>${data.main.temp} °C</td></tr>
+            <tr><td>☁️ 狀態</td><td>${data.weather[0].description}</td></tr>
+            <tr><td>💧 濕度</td><td>${data.main.humidity}%</td></tr>
+            <tr><td>🌬️ 風速</td><td>${data.wind.speed} m/s</td></tr>
+            <tr><td>📍 經緯度</td><td>${data.coord.lat}, ${data.coord.lon}</td></tr>
+          </table>
+        `;
+        resultDiv.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = `<p class="error">❌ 查詢失敗，請檢查城市名稱或 API KEY 是否正確。</p>`;
+      }
+    };
+  </script>
+
+</body>
+
+</html>

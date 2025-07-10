@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>📚 書籍查詢系統 | Open Library</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 基本樣式設定 */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #2193b0, #6dd5ed);
+            /* 漸層背景 */
+            color: white;
+            margin: 0;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        /* 搜尋區塊樣式 */
+        #search-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        input[type="text"] {
+            padding: 12px 20px;
+            width: 300px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background-color: #ff9800;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #fb8c00;
+        }
+
+        /* 搜尋結果網格樣式 */
+        #results {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        /* 書籍卡片樣式 */
+        .book {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: left;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .book:hover {
+            transform: translateY(-4px);
+            /* 滑過時微微浮起 */
+        }
+
+        .book img {
+            width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: white;
+        }
+
+        .book h3 {
+            font-size: 1.1rem;
+            margin: 10px 0 5px;
+            color: #fff;
+        }
+
+        .book p {
+            font-size: 0.9rem;
+            color: #f0f0f0;
+            margin: 2px 0;
+        }
+
+        .book a {
+            text-decoration: none;
+            color: #ffdd57;
+            /* 書名的連結色 */
+        }
+
+        .error {
+            color: #ffb3b3;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 標題與搜尋欄 -->
+    <h1>📖 書籍查詢系統</h1>
+
+    <div id="search-container">
+        <input type="text" id="bookInput" placeholder="請輸入關鍵字 (例如：哈利)">
+        <button onclick="searchBooks()">查詢</button>
+    </div>
+
+    <!-- 結果顯示區 -->
+    <div id="results"></div>
+
+    <script>
+        // 搜尋書籍主函式
+        async function searchBooks() {
+            const query = document.getElementById('bookInput').value.trim(); // 取得輸入值
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = ''; // 清空舊資料
+
+            // 檢查是否有輸入內容
+            if (!query) {
+                resultsDiv.innerHTML = '<p class="error">請輸入關鍵字。</p>';
+                return;
+            }
+
+            try {
+                // 呼叫 Open Library 的模糊搜尋 API（q=關鍵字）
+                const response = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                // 檢查是否有結果
+                if (data.docs.length === 0) {
+                    resultsDiv.innerHTML = '<p class="error">❌ 找不到相關書籍。</p>';
+                    return;
+                }
+
+                // 顯示最多前 12 筆結果
+                data.docs.slice(0, 12).forEach(book => {
+                    const title = book.title || '未命名';
+                    const author = (book.author_name && book.author_name[0]) || '未知作者';
+                    const publisher = (book.publisher && book.publisher[0]) || '未知出版社';
+                    const year = book.first_publish_year || '年份不詳';
+                    const coverId = book.cover_i;
+                    const olid = book.key || ''; // 書籍在 Open Library 的唯一 key
+                    const link = `https://openlibrary.org${olid}`; // 詳細頁連結
+
+                    // 如果有封面 ID，就用封面網址，否則用 placeholder 圖片
+                    const coverUrl = coverId
+                        ? `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`
+                        : `https://via.placeholder.com/200x250?text=No+Cover`;
+
+                    // 組合 HTML 書籍卡片
+                    const bookHTML = `
+            <div class="book">
+              <img src="${coverUrl}" alt="封面">
+              <h3><a href="${link}" target="_blank">${title}</a></h3>
+              <p>作者：${author}</p>
+              <p>出版社：${publisher}</p>
+              <p>出版年份：${year}</p>
+            </div>
+          `;
+
+                    // 加入到結果區
+                    resultsDiv.innerHTML += bookHTML;
+                });
+            } catch (error) {
+                console.error(error); // 印出錯誤訊息方便除錯
+                resultsDiv.innerHTML = '<p class="error">⚠️ 查詢失敗，請稍後再試。</p>';
+            }
+        }
+    </script>
+
+</body>
+
+</html>

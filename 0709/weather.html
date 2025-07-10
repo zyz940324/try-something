@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>查詢天氣</h2>
+    <input type="text" id="cityInput" placeholder="輸入城市"><button id="searchBtn">查詢
+    </button>
+    <div id="result"></div>
+    <script>
+        document.getElementById('searchBtn').addEventListener('click', function () {
+            const city = document.getElementById('cityInput').value;
+            if (city) {
+                fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=6c125517593a85f53a5d393c9e14c09e&units=metric`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.cod === 200) {
+                            const weather = `城市: ${data.name}, 天氣: ${data.weather[0].description}, 溫度: ${data.main.temp}°C`;
+                            document.getElementById('result').innerText = weather;
+                        } else {
+                            document.getElementById('result').innerText = '查無此城市';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching weather data:', error);
+                        document.getElementById('result').innerText = '查詢失敗，請稍後再試';
+                    });
+            } else {
+                document.getElementById('result').innerText = '請輸入城市名稱';
+            }
+        });
+    </script>
+</body>
+
+</html>

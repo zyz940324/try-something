@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>全球空氣品質查詢</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #ffffff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00796b;
+        }
+
+        input,
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            margin-bottom: 16px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #00796b;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #004d40;
+        }
+
+        .result {
+            background: #f0f0f0;
+            padding: 16px;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>空氣品質查詢</h1>
+        <input type="text" id="cityInput" placeholder="請輸入城市名稱，例如 Taipei" />
+        <button onclick="getAirQuality()">查詢空氣品質</button>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_KEY = "6c125517593a85f53a5d393c9e14c09e";  // ←←← 在這裡填入你的 OpenWeather API 金鑰
+
+        async function getAirQuality() {
+            const city = document.getElementById('cityInput').value.trim();
+            const resultDiv = document.getElementById('result');
+
+            if (!city) {
+                resultDiv.innerHTML = "<span style='color:red;'>請輸入城市名稱</span>";
+                return;
+            }
+
+            resultDiv.innerHTML = "查詢中...";
+
+            try {
+                // 查城市的經緯度
+                const geoUrl = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`;
+                const geoRes = await fetch(geoUrl);
+                const geoData = await geoRes.json();
+
+                if (!geoData || geoData.length === 0) {
+                    resultDiv.innerHTML = "找不到該城市，請確認拼字";
+                    return;
+                }
+
+                const { lat, lon } = geoData[0];
+
+                // 查空氣品質
+                const airUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
+                const airRes = await fetch(airUrl);
+                const airData = await airRes.json();
+
+                const aqi = airData.list[0].main.aqi;
+                const components = airData.list[0].components;
+
+                const aqiLevels = [
+                    { text: "良好 Good 😊", color: "#009966" },
+                    { text: "普通 Fair 😐", color: "#ffde33" },
+                    { text: "對敏感族群不健康 Moderate 😷", color: "#ff9933" },
+                    { text: "不健康 Poor 🤒", color: "#cc0033" },
+                    { text: "非常不健康 Very Poor ☠️", color: "#660099" }
+                ];
+
+                const level = aqiLevels[aqi - 1];
+
+                // 顯示內容
+                let html = `
+          <h3>📍 城市：${city}</h3>
+          <div style="
+            background-color: ${level.color};
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 16px;
+          ">
+            🌫 AQI 指數：${aqi} - ${level.text}
+          </div>
+          <div><strong>🧪 污染物濃度（μg/m³）：</strong>
+            <ul>
+        `;
+
+                for (const key in components) {
+                    html += `<li>${key.toUpperCase()}: ${components[key]}</li>`;
+                }
+                html += `</ul></div>`;
+
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                console.error(error);
+                resultDiv.innerHTML = "<span style='color:red;'>查詢失敗，請稍後再試。</span>";
+            }
+        }
+    </script>
+</body>
+
+</html>

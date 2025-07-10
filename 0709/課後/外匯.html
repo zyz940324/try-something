@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>專業外匯匯率轉換器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 420px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #e0e0e0;
+        }
+
+        select,
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #333;
+            background: #f0f0f0;
+            transition: box-shadow 0.3s ease;
+        }
+
+        select:focus,
+        input[type="number"]:focus {
+            outline: none;
+            box-shadow: 0 0 8px #8a2be2;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px 0;
+            background: #8a2be2;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.6);
+        }
+
+        button:hover {
+            background: #6f23c8;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            min-height: 60px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 25px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>外匯匯率轉換器</h1>
+
+        <label for="amount">輸入金額</label>
+        <input type="number" id="amount" placeholder="請輸入數字" min="0" step="any" value="1" />
+
+        <label for="fromCurrency">從（貨幣）</label>
+        <select id="fromCurrency"></select>
+
+        <label for="toCurrency">換成（貨幣）</label>
+        <select id="toCurrency"></select>
+
+        <button id="btnConvert">立即換算</button>
+
+        <div id="result">請輸入金額並選擇貨幣後，點擊換算</div>
+    </div>
+
+    <script>
+        const apiKey = "de60900717fc0b7c3153b864"; // 換成你自己的 ExchangeRate-API Key
+        const apiBase = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/`;
+
+        const currencySymbols = {
+            "USD": "$",
+            "TWD": "NT$",
+            "JPY": "¥",
+            "EUR": "€",
+            "GBP": "£",
+            "AUD": "A$",
+            "CAD": "C$",
+            "CHF": "Fr.",
+            "CNY": "¥",
+            "HKD": "HK$"
+        };
+
+        const currencies = Object.keys(currencySymbols);
+
+        const fromSelect = document.getElementById("fromCurrency");
+        const toSelect = document.getElementById("toCurrency");
+        const amountInput = document.getElementById("amount");
+        const btnConvert = document.getElementById("btnConvert");
+        const resultDiv = document.getElementById("result");
+
+        function populateSelects() {
+            currencies.forEach(cur => {
+                fromSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+                toSelect.innerHTML += `<option value="${cur}">${cur}</option>`;
+            });
+            fromSelect.value = "USD";
+            toSelect.value = "TWD";
+        }
+
+        async function getRates(base) {
+            try {
+                resultDiv.textContent = "查詢中...";
+                const res = await fetch(apiBase + base);
+                const data = await res.json();
+                if (data.result === "success") {
+                    return data.conversion_rates;
+                } else {
+                    throw new Error(data["error-type"] || "API 錯誤");
+                }
+            } catch (error) {
+                resultDiv.textContent = `錯誤: ${error.message}`;
+                return null;
+            }
+        }
+
+        async function convert() {
+            const amount = parseFloat(amountInput.value);
+            const from = fromSelect.value;
+            const to = toSelect.value;
+
+            if (isNaN(amount) || amount <= 0) {
+                resultDiv.textContent = "請輸入正確的金額";
+                return;
+            }
+            if (from === to) {
+                resultDiv.textContent = "請選擇不同的貨幣";
+                return;
+            }
+
+            const rates = await getRates(from);
+            if (!rates) return;
+
+            const rate = rates[to];
+            if (!rate) {
+                resultDiv.textContent = `查無 ${to} 匯率資料`;
+                return;
+            }
+
+            const symbolFrom = currencySymbols[from] || from;
+            const symbolTo = currencySymbols[to] || to;
+            const converted = (amount * rate).toFixed(4);
+
+            resultDiv.innerHTML =
+                `<div>1 ${from} = ${rate} ${to}</div>` +
+                `<div>${symbolFrom} ${amount} = ${symbolTo} ${converted}</div>`;
+        }
+
+        btnConvert.addEventListener("click", convert);
+
+        populateSelects();
+    </script>
+</body>
+
+</html>

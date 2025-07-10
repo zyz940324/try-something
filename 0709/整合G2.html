@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>城市與金融資訊整合平台</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Noto+Sans+TC:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            /* 綠色 */
+            --primary-dark: #388E3C;
+            --secondary-color: #2196F3;
+            /* 藍色 */
+            --secondary-dark: #1976D2;
+            --accent-color: #FFC107;
+            /* 黃色 */
+            --text-color: #333;
+            --light-text-color: #f8f8f8;
+            --bg-light: #e8f5e9;
+            /* 淺綠色背景 */
+            --bg-gradient-start: #e0f2f7;
+            /* 淺藍色 */
+            --bg-gradient-end: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --border-radius: 12px;
+            --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--primary-dark);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 18px 10px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--light-text-color);
+            font-weight: 700;
+            background-color: var(--primary-dark);
+            border-bottom: 4px solid transparent;
+            transition: all 0.3s ease;
+            font-size: 1.05rem;
+        }
+
+        .tab:hover {
+            background-color: #2e7d32;
+            /* 更深的綠色 */
+        }
+
+        .tab.active {
+            border-bottom: 4px solid var(--accent-color);
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px 20px;
+            flex-grow: 1;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container,
+        .weather-container,
+        .currency-container {
+            width: 100%;
+            max-width: 700px;
+            margin: 20px 0;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            backdrop-filter: blur(5px);
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            letter-spacing: 0.8px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: #fdfdfd;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            width: 100%;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        #weatherResult,
+        #airResult,
+        #geoResult,
+        #currencyResult {
+            margin-top: 25px;
+            padding: 20px;
+            background: #f0f4f8;
+            /* 淺灰藍色 */
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-color);
+            border: 1px solid #e0e0e0;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.8;
+            word-break: break-word;
+        }
+
+        #weatherResult div,
+        #airResult div,
+        #geoResult div,
+        #currencyResult div {
+            margin-bottom: 8px;
+        }
+
+        #weatherChart {
+            margin-top: 25px;
+            max-height: 300px;
+            width: 100%;
+        }
+
+        .info-card {
+            background-color: #e3f2fd;
+            /* 淺藍色 */
+            border-left: 5px solid var(--secondary-color);
+            padding: 15px 20px;
+            border-radius: 8px;
+            text-align: left;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            color: #424242;
+        }
+
+        .info-card b {
+            color: var(--primary-dark);
+        }
+
+        .error {
+            color: #D32F2F;
+            /* 紅色 */
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Currency Converter Specific Styles */
+        .currency-container h1 {
+            color: #8a2be2;
+            /* 紫色 */
+        }
+
+        .currency-container button {
+            background: #8a2be2;
+            /* 紫色 */
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .currency-container button:hover {
+            background: #6f23c8;
+        }
+
+        #currencyResult {
+            background: rgba(138, 43, 226, 0.1);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            color: #4a148c;
+            font-weight: 600;
+        }
+
+        #currencyResult div {
+            margin: 5px 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .tab {
+                font-size: 0.9rem;
+                padding: 15px 5px;
+            }
+
+            .container,
+            .weather-container,
+            .currency-container {
+                padding: 20px;
+                margin: 15px 0;
+            }
+
+            h1,
+            h2 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+
+            input,
+            select,
+            button,
+            textarea {
+                font-size: 0.95rem;
+                padding: 10px 12px;
+            }
+
+            #weatherResult,
+            #airResult,
+            #geoResult,
+            #currencyResult {
+                font-size: 1rem;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .tab {
+                font-size: 0.8rem;
+                padding: 12px 3px;
+            }
+
+            .container,
+            .weather-container,
+            .currency-container {
+                padding: 15px;
+            }
+
+            h1,
+            h2 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tabs">
+        <div class="tab active" onclick="openTab('weather')">🌍 天氣查詢</div>
+        <div class="tab" onclick="openTab('air')">🌫 空氣品質</div>
+        <div class="tab" onclick="openTab('geo')">🗺 城市資訊</div>
+        <div class="tab" onclick="openTab('currency')">💱 匯率換算</div>
+    </div>
+
+    <div id="weather" class="tab-content active">
+        <div class="weather-container">
+            <h2>🌍 全球天氣查詢</h2>
+            <input type="text" id="weatherCity" placeholder="請輸入城市名稱..." />
+            <button onclick="getWeather()">查詢</button>
+            <div id="weatherResult">請輸入城市並點擊「查詢」來取得天氣資訊。</div>
+            <canvas id="weatherChart"></canvas>
+        </div>
+    </div>
+
+    <div id="air" class="tab-content">
+        <div class="container">
+            <h2>🌫 空氣品質查詢</h2>
+            <input type="text" id="airCity" placeholder="請輸入城市名稱，例如 Taipei" />
+            <button onclick="getAirQuality()">查詢空氣品質</button>
+            <div id="airResult"></div>
+        </div>
+    </div>
+
+    <div id="geo" class="tab-content">
+        <div class="container">
+            <h2>🗺 城市資訊查詢</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 8px;">🔎 請使用英文輸入城市名稱，例如：New York、Tokyo、Taipei</p>
+            <input type="text" id="geoCity" placeholder="請輸入城市名稱（請用英文，例如 Taipei）" />
+            <button onclick="searchCity()">查詢</button>
+            <div id="geoMsg"></div>
+            <div id="geoResult"></div>
+        </div>
+    </div>
+
+    <div id="currency" class="tab-content">
+        <div class="currency-container">
+            <h1>💱 專業外匯匯率轉換器</h1>
+
+            <label for="amount">輸入金額</label>
+            <input type="number" id="amount" placeholder="請輸入數字" min="0" step="any" value="1" />
+
+            <label for="fromCurrency">從（貨幣）</label>
+            <select id="fromCurrency"></select>
+
+            <label for="toCurrency">換成（貨幣）</label>
+            <select id="toCurrency"></select>
+
+            <button id="btnConvert">立即換算</button>
+
+            <div id="currencyResult">請輸入金額並選擇貨幣後，點擊換算</div>
+        </div>
+    </div>
+
+    <script>
+        // Tab 切換功能
+        function openTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.querySelector(`.tab[onclick*="${tabName}"]`).classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // 天氣查詢功能
+        let weatherChartInstance; // 用於儲存 Chart 實例
+        async function getWeather() {
+            const apiKey = '6c125517593a85f53a5d393c9e14c09e';
+            const city = document.getElementById('weatherCity').value.trim();
+            const resultBox = document.getElementById('weatherResult');
+            if (!city) {
+                resultBox.innerHTML = '<span class="error">⚠️ 請輸入有效的城市名稱</span>';
+                return;
+            }
+            resultBox.textContent = '🔄 正在取得天氣資料...';
+
+            try {
+                const res = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=zh_tw`);
+                const data = await res.json();
+
+                if (data.cod !== "200") {
+                    throw new Error(data.message || "查詢天氣失敗");
+                }
+
+                const current = data.list[0];
+                const weather = current.weather[0];
+                const main = current.main;
+                const wind = current.wind;
+
+                resultBox.innerHTML = `
+                    <div><b>📍 城市：</b>${data.city.name}, ${data.city.country}</div>
+                    <div><b>🌤️ 天氣：</b>${weather.description}</div>
+                    <div><b>🌡️ 溫度：</b>${main.temp}°C，體感：${main.feels_like}°C</div>
+                    <div><b>💧 濕度：</b>${main.humidity}%</div>
+                    <div><b>🌬️ 風速：</b>${wind.speed} m/s</div>
+                `;
+
+                const temps = data.list.slice(0, 8).map(e => e.main.temp);
+                const labels = data.list.slice(0, 8).map(e => new Date(e.dt * 1000).getHours() + ':00');
+                const ctx = document.getElementById('weatherChart').getContext('2d');
+
+                if (weatherChartInstance) {
+                    weatherChartInstance.destroy(); // 銷毀舊的圖表實例
+                }
+
+                weatherChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '未來溫度 (°C)',
+                            data: temps,
+                            borderColor: '#4a90e2',
+                            backgroundColor: 'rgba(74, 144, 226, 0.2)',
+                            tension: 0.4,
+                            fill: true,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#4a90e2',
+                            pointBorderColor: '#fff',
+                            pointHoverRadius: 7
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                title: {
+                                    display: true,
+                                    text: '溫度 (°C)'
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: '時間'
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        return context.dataset.label + ': ' + context.raw + '°C';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (err) {
+                resultBox.innerHTML = `<span class="error">❌ 查詢失敗：${err.message}</span>`;
+            }
+        }
+
+        // 空氣品質查詢功能
+        async function getAirQuality() {
+            const apiKey = "6c125517593a85f53a5d393c9e14c09e";
+            const city = document.getElementById('airCity').value.trim();
+            const resultDiv = document.getElementById('airResult');
+            if (!city) {
+                resultDiv.innerHTML = "<span class='error'>請輸入城市名稱</span>";
+                return;
+            }
+            resultDiv.textContent = '🔄 正在取得空氣品質資料...';
+
+            try {
+                const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`);
+                const geoData = await geoRes.json();
+                if (!geoData.length) {
+                    resultDiv.innerHTML = "<span class='error'>❌ 找不到該城市</span>";
+                    return;
+                }
+
+                const { lat, lon } = geoData[0];
+                const airRes = await fetch(`https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`);
+                const airData = await airRes.json();
+                const aqi = airData.list[0].main.aqi;
+                const components = airData.list[0].components;
+                const aqiLevels = [
+                    { text: "良好 😊", color: "#009966" },
+                    { text: "普通 😐", color: "#ffde33" },
+                    { text: "敏感族群不健康 😷", color: "#ff9933" },
+                    { text: "不健康 🤒", color: "#cc0033" },
+                    { text: "非常不健康 ☠️", color: "#660099" },
+                    { text: "危害 💀", color: "#7e0023" } // AQI 6, 增加一個等級
+                ];
+                const level = aqiLevels[aqi - 1] || { text: "未知", color: "#cccccc" }; // 防止索引超出範圍
+
+                let html = `<div style="background:${level.color};color:white;padding:12px;border-radius:8px;text-align:center;font-weight:700;margin-bottom:15px;">
+                                🌫 AQI 指數：${aqi} - ${level.text}
+                            </div>
+                            <div style="text-align: left; width: 100%;">
+                                <h3 style="margin-top: 0; color: ${getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim()};">主要污染物濃度：</h3>
+                                <ul style="list-style: none; padding: 0; margin: 0;">`;
+                for (const key in components) {
+                    html += `<li style="padding: 5px 0;"><b>${key.toUpperCase()}</b>: ${components[key]} µg/m³</li>`;
+                }
+                html += `       </ul>
+                            </div>`;
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = `<span class='error'>❌ 查詢失敗，請稍後再試。錯誤訊息: ${e.message}</span>`;
+            }
+        }
+
+        // 城市資訊查詢功能
+        async function searchCity() {
+            const API_KEY = "e7ae0cea05msh45d7e3af1310a1bp12a4b7jsn6de8688ed98d";
+            const API_HOST = "wft-geo-db.p.rapidapi.com";
+            const city = document.getElementById("geoCity").value.trim();
+            const msg = document.getElementById("geoMsg");
+            const result = document.getElementById("geoResult");
+
+            if (!city) {
+                msg.innerHTML = "<span class='error'>請輸入城市名稱</span>";
+                result.innerHTML = "";
+                return;
+            }
+
+            try {
+                msg.textContent = "查詢中...";
+                result.innerHTML = "";
+                const res = await fetch(`https://${API_HOST}/v1/geo/cities?namePrefix=${city}&limit=1`, {
+                    headers: {
+                        "X-RapidAPI-Key": API_KEY,
+                        "X-RapidAPI-Host": API_HOST
+                    }
+                });
+                const data = await res.json();
+                if (!data.data || data.data.length === 0) {
+                    msg.innerHTML = "<span class='error'>查無資料，請確認城市名稱是否正確或使用英文輸入。</span>";
+                    return;
+                }
+
+                const c = data.data[0];
+                msg.innerHTML = "";
+                result.innerHTML = `
+                    <div class="info-card">
+                        <b>城市：</b>${c.city}<br>
+                        <b>國家：</b>${c.country}<br>
+                        <b>國家代碼：</b>${c.countryCode}<br>
+                        <b>地區：</b>${c.region || 'N/A'}<br>
+                        <b>人口：</b>${c.population.toLocaleString()}<br>
+                        <b>時區：</b>${c.timezone}<br>
+                        <b>座標：</b>緯度 ${c.latitude}, 經度 ${c.longitude}
+                    </div>`;
+            } catch (e) {
+                msg.innerHTML = `<span class='error'>❌ 錯誤：${e.message}</span>`;
+            }
+        }
+
+
+        // 匯率換算功能
+        const currencyApiKey = "de60900717fc0b7c3153b864"; // 換成你自己的 ExchangeRate-API Key
+        const currencyApiBase = `https://v6.exchangerate-api.com/v6/${currencyApiKey}/latest/`;
+
+        const currencySymbols = {
+            "USD": "$",
+            "TWD": "NT$",
+            "JPY": "¥",
+            "EUR": "€",
+            "GBP": "£",
+            "AUD": "A$",
+            "CAD": "C$",
+            "CHF": "Fr.",
+            "CNY": "¥",
+            "HKD": "HK$",
+            "KRW": "₩", // 韓元
+            "SGD": "S$", // 新加坡元
+            "THB": "฿", // 泰銖
+            "VND": "₫", // 越南盾
+            "INR": "₹", // 印度盧比
+            "MYR": "RM", // 馬來西亞令吉
+            "IDR": "Rp", // 印尼盾
+            "PHP": "₱", // 菲律賓比索
+            "NZD": "NZ$", // 紐西蘭元
+            "BRL": "R$", // 巴西雷亞爾
+            "MXN": "Mex$", // 墨西哥比索
+            "ZAR": "R", // 南非蘭特
+            "RUB": "₽" // 俄羅斯盧布
+        };
+
+        const fromSelect = document.getElementById("fromCurrency");
+        const toSelect = document.getElementById("toCurrency");
+        const amountInput = document.getElementById("amount");
+        const btnConvert = document.getElementById("btnConvert");
+        const currencyResultDiv = document.getElementById("currencyResult"); // 改名避免衝突
+
+        function populateCurrencySelects() {
+            const currencies = Object.keys(currencySymbols).sort(); // 按字母排序
+            currencies.forEach(cur => {
+                const optionFrom = document.createElement("option");
+                optionFrom.value = cur;
+                optionFrom.textContent = `${cur} (${currencySymbols[cur]})`;
+                fromSelect.appendChild(optionFrom);
+
+                const optionTo = document.createElement("option");
+                optionTo.value = cur;
+                optionTo.textContent = `${cur} (${currencySymbols[cur]})`;
+                toSelect.appendChild(optionTo);
+            });
+            fromSelect.value = "USD";
+            toSelect.value = "TWD";
+        }
+
+        async function getExchangeRates(base) {
+            try {
+                currencyResultDiv.textContent = "查詢中...";
+                const res = await fetch(currencyApiBase + base);
+                const data = await res.json();
+                if (data.result === "success") {
+                    return data.conversion_rates;
+                } else {
+                    throw new Error(data["error-type"] || "API 錯誤");
+                }
+            } catch (error) {
+                currencyResultDiv.innerHTML = `<span class="error">錯誤: ${error.message}</span>`;
+                return null;
+            }
+        }
+
+        async function convertCurrency() {
+            const amount = parseFloat(amountInput.value);
+            const from = fromSelect.value;
+            const to = toSelect.value;
+
+            if (isNaN(amount) || amount <= 0) {
+                currencyResultDiv.innerHTML = "<span class='error'>請輸入正確的金額</span>";
+                return;
+            }
+            if (from === to) {
+                currencyResultDiv.innerHTML = "<span class='error'>請選擇不同的貨幣</span>";
+                return;
+            }
+
+            const rates = await getExchangeRates(from);
+            if (!rates) return;
+
+            const rate = rates[to];
+            if (!rate) {
+                currencyResultDiv.innerHTML = `<span class='error'>查無 ${to} 匯率資料</span>`;
+                return;
+            }
+
+            const symbolFrom = currencySymbols[from] || from;
+            const symbolTo = currencySymbols[to] || to;
+            const converted = (amount * rate).toFixed(4);
+
+            currencyResultDiv.innerHTML =
+                `<div>1 ${from} = ${rate.toFixed(4)} ${to}</div>` +
+                `<div>${symbolFrom} ${amount.toLocaleString()} = ${symbolTo} ${converted.toLocaleString()}</div>`;
+        }
+
+        btnConvert.addEventListener("click", convertCurrency);
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            populateCurrencySelects();
+            openTab('weather'); // 預設打開天氣查詢頁面
+        });
+
+    </script>
+</body>
+
+</html>

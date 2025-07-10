@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>城市資訊查詢 - GeoDB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background: #f7f9fc;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #0e7490;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            box-sizing: border-box;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0e7490;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #155e75;
+        }
+
+        .result {
+            margin-top: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .info-card {
+            background: #f0fdf4;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        @media screen and (max-width: 600px) {
+            .container {
+                margin: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>城市資訊查詢</h1>
+        <input type="text" id="cityInput" placeholder="請輸入城市名稱，如：Taipei">
+        <button onclick="searchCity()">查詢</button>
+        <div id="message" class="loading"></div>
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        const API_KEY = "e7ae0cea05msh45d7e3af1310a1bp12a4b7jsn6de8688ed98d";  // ← 在這裡放上你的 GeoDB API Key
+        const API_HOST = "wft-geo-db.p.rapidapi.com";
+
+        async function searchCity() {
+            const cityName = document.getElementById("cityInput").value.trim();
+            const message = document.getElementById("message");
+            const resultDiv = document.getElementById("result");
+
+            if (!cityName) {
+                message.innerHTML = "<div class='error'>請輸入城市名稱</div>";
+                resultDiv.innerHTML = "";
+                return;
+            }
+
+            message.textContent = "查詢中...";
+            resultDiv.innerHTML = "";
+
+            try {
+                const res = await fetch(`https://${API_HOST}/v1/geo/cities?namePrefix=${cityName}&limit=1`, {
+                    method: "GET",
+                    headers: {
+                        "X-RapidAPI-Key": API_KEY,
+                        "X-RapidAPI-Host": API_HOST
+                    }
+                });
+
+                if (!res.ok) throw new Error("無法取得資料");
+
+                const data = await res.json();
+
+                if (data.data.length === 0) {
+                    message.innerHTML = "<div class='error'>查無此城市</div>";
+                    return;
+                }
+
+                const city = data.data[0];
+                message.innerHTML = "";
+
+                resultDiv.innerHTML = `
+          <div class="info-card">
+            <strong>城市名稱：</strong>${city.city}<br>
+            <strong>國家：</strong>${city.country}<br>
+            <strong>地區/州：</strong>${city.region}<br>
+            <strong>人口：</strong>${city.population.toLocaleString()} 人<br>
+            <strong>時區：</strong>${city.timezone}<br>
+            <strong>座標：</strong>${city.latitude}, ${city.longitude}
+          </div>
+        `;
+            } catch (err) {
+                message.innerHTML = `<div class='error'>查詢錯誤：${err.message}</div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

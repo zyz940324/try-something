@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>天氣查詢小工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        #result {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            width: 300px;
+            background-color: #f9f9f9;
+        }
+
+        input,
+        button {
+            padding: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>查詢天氣</h2>
+    <input type="text" id="cityInput" placeholder="輸入城市">
+    <button id="searchBtn">查詢</button>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('searchBtn').onclick = async () => {
+            const city = document.getElementById('cityInput').value.trim();
+            const API_KEY = '5fd620cd38c1a177907993ad16916df9';
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+
+            try {
+                const res = await fetch(url);
+                if (!res.ok) throw new Error("查無資料");
+                const data = await res.json();
+
+                document.getElementById('result').innerHTML = `
+          <h3>${data.name} 的天氣</h3>
+          <p>🌡️ 溫度：${data.main.temp} °C</p>
+          <p>☁️ 狀態：${data.weather[0].description}</p>
+          <p>💧 濕度：${data.main.humidity}%</p>
+          <p>🌬️ 風速：${data.wind.speed} m/s</p>
+        `;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('result').innerHTML = `<p style="color:red;">查詢失敗，請檢查城市名稱。</p>`;
+            }
+        };
+    </script>
+
+</body>
+
+</html>

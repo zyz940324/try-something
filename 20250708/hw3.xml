@@ -1,0 +1,26 @@
+<school>
+  <class name="AI二甲">
+    <teacher>
+      <name>徐老師</name>
+      <email>teacher@example.com</email>
+    </teacher>
+    <students>
+      <student>
+        <name>小明</name>
+        <age>16</age>
+        <scores>
+          <math>90</math>
+          <english>85</english>
+        </scores>
+      </student>
+      <student>
+        <name>小華</name>
+        <age>17</age>
+        <scores>
+          <math>95</math>
+          <english>88</english>
+        </scores>
+      </student>
+    </students>
+  </class>
+</school>
