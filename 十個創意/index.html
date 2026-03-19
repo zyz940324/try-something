@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop-X Pro | 模組化 AI 工作站 v5.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+TC:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <main class="dashboard">
+        <header class="header">
+            <div class="logo-area">
+                <h1>Desktop<span>-X</span> Pro</h1>
+                <p>Modular AI Workstation v5.0</p>
+            </div>
+            <div class="header-info">
+                <div id="backend-status-card" style="font-size: 0.75rem; margin-bottom: 5px; text-align: right;">
+                    <span id="backend-status-dot"
+                        style="width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--danger); margin-right: 5px;"></span>
+                    <span id="backend-status-text">系統分析引擎：連線中...</span>
+                </div>
+                <div id="time"><span id="time-symbol" style="margin-right:10px; opacity:0.8;"></span>00:00:00</div>
+                <div id="date">2026年1月14日</div>
+            </div>
+        </header>
+
+        <section class="grid-container">
+            <!-- Row 1: Dashboard (Wide) + System Monitor (Normal) -->
+            <!-- 1. Daily Dashboard -->
+            <div class="card card-wide">
+                <div class="card-icon">📊</div>
+                <div class="card-content">
+                    <h3>每日工作簡報</h3>
+                    <p id="weather-info">初始化系統服務...</p>
+                    <div class="work-mode-container" style="margin-top:20px; text-align:left;">
+                        <div style="font-size: 0.9rem; margin-bottom: 15px; color: var(--text-main); font-weight: 600;">
+                            選擇啟動項目：</div>
+                        <div
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; font-size: 0.9rem;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="work-target" value="https://mail.google.com" checked> 📧
+                                Gmail
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="work-target" value="https://calendar.google.com" checked>
+                                📅 日曆
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="work-target" value="https://line.me"> 💬 Line
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="work-target" value="https://github.com"> 🐙 GitHub
+                            </label>
+                        </div>
+                        <button class="btn btn-primary" id="work-btn" onclick="startWorkMode()"
+                            style="width:100%; padding:18px; font-size:1.2rem; background:linear-gradient(135deg, #6366f1, #a855f7); border:none; box-shadow:0 4px 15px rgba(99,102,241,0.3)">
+                            🚀 啟動選中的工作環境
+                        </button>
+                    </div>
+                    <div class="changelog-container" style="margin-top:25px;">
+                        <h4
+                            style="font-size:1rem; color:var(--text-main); margin-bottom:12px; display:flex; align-items:center; gap:8px; font-weight:700;">
+                            <span>📝</span> 最近 AI 變更記錄 (近期 5 筆)
+                        </h4>
+                        <div id="changelog-list"
+                            style="font-size:0.9rem; background:rgba(0,0,0,0.05); padding:15px; border-radius:12px; max-height:160px; overflow-y:auto;">
+                            正在載入日誌...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2+5. Merged System Real-time Monitor -->
+            <div class="card">
+                <div class="card-icon">⚡</div>
+                <div class="card-content">
+                    <h3>系統即時監控</h3>
+                    <div class="monitor-group">
+                        <div class="gauge-container">
+                            <div class="gauge-label"><span>CPU LOAD</span> <span id="cpu-val">--%</span></div>
+                            <div class="gauge-bar-bg">
+                                <div id="cpu-fill" class="gauge-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-container">
+                            <div class="gauge-label"><span>RAM USAGE</span> <span id="ram-val">--%</span></div>
+                            <div class="gauge-bar-bg">
+                                <div id="ram-fill" class="gauge-fill"
+                                    style="width: 0%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+                            </div>
+                        </div>
+                        <div class="gauge-container">
+                            <div class="gauge-label"><span>DISK USAGE</span> <span id="disk-val">--%</span></div>
+                            <div class="gauge-bar-bg">
+                                <div id="disk-fill" class="gauge-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="network-activity"
+                        style="display: flex; justify-content: space-between; margin-top: 20px; font-size: 0.85rem; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 10px;">
+                        <span style="color: var(--text-dim);">🔼 UP: <span id="net-up"
+                                style="color: var(--text-main); font-weight: 600;">0 KB/s</span></span>
+                        <span style="color: var(--text-dim);">🔽 DOWN: <span id="net-down"
+                                style="color: var(--text-main); font-weight: 600;">0 KB/s</span></span>
+                    </div>
+
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--glass-border);">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 0.85rem; color: var(--text-dim);">資源佔用程序：</span>
+                        <span style="font-size: 0.7rem; color: var(--accent); opacity: 0.8;">(CPU + MEM 權重)</span>
+                    </div>
+                    <div id="process-list" class="result-area"
+                        style="display:block; font-size:0.85rem; max-height: 180px; overflow-y: auto; background:transparent; border:none; padding:0;">
+                        掃描中...</div>
+                </div>
+            </div>
+
+            <!-- Row 2: Transcriber (Wide) + To-Do (Normal) -->
+            <!-- 3. Transcriber -->
+            <div class="card card-wide">
+                <div class="card-icon">🎙️</div>
+                <div class="card-content">
+                    <h3>專業逐字稿助手</h3>
+                    <div style="margin-top:20px; display:flex; gap:10px;">
+                        <button class="btn btn-danger" id="trans-btn" onclick="handleTranscription()"
+                            style="padding: 12px 25px;">開始語音錄製</button>
+                    </div>
+                    <div id="trans-status" class="mini-hint" style="margin-top:15px; font-size: 0.9rem;">等待音訊輸入...</div>
+                    <div class="result-area" id="trans-history-box"
+                        style="display:block; max-height:220px; overflow-y:auto;"></div>
+                </div>
+            </div>
+
+            <!-- 8. TaskTrack (To-Do List) -->
+            <div class="card">
+                <div class="card-icon">🎯</div>
+                <div class="card-content">
+                    <h3>待辦事項</h3>
+                    <div class="todo-input">
+                        <input type="text" id="task-in" placeholder="輸入待辦內容..." style="font-size: 1rem;">
+                        <button class="btn btn-primary" onclick="addNewTask()">+</button>
+                    </div>
+                    <div class="task-list" id="task-list-box" style="max-height: 250px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- Row 3: Summarizer (Wide) + QuoteVibe (Normal) -->
+            <!-- 4. Summarizer -->
+            <div class="card card-wide">
+                <div class="card-icon">📖</div>
+                <div class="card-content">
+                    <h3>學習速讀機器人</h3>
+                    <div class="input-group">
+                        <input type="text" id="sum-url" placeholder="輸入網址..." style="font-size: 1rem;">
+                        <button class="btn btn-primary" onclick="startAIAnalysis()"
+                            style="padding: 10px 25px;">分析</button>
+                    </div>
+                    <div id="sum-results" class="result-area" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- 9. QuoteVibe -->
+            <div class="card" style="padding: 0; overflow: hidden; position: relative; min-height: 250px;">
+                <div id="quote-img-container"
+                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0.3; transition: background-image 0.5s ease-in-out;">
+                </div>
+                <div class="card-content"
+                    style="position: relative; z-index: 1; padding: 25px; display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                    <h3 style="margin-top: 0;">每日智言</h3>
+                    <div id="pro-quote"
+                        style="font-size: 1.2rem; line-height: 1.7; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+                        載入中...</div>
+                </div>
+            </div>
+
+            <!-- Row 4: Search (Wide) + Ambient (Normal) -->
+            <!-- 7. Semantic Search -->
+            <div class="card card-wide">
+                <div class="card-icon">🔎</div>
+                <div class="card-content">
+                    <h3>語義檔案檢索</h3>
+                    <div class="input-group">
+                        <input type="text" id="search-query" placeholder="搜尋內容..." style="font-size: 1rem;">
+                        <button class="btn btn-outline" onclick="runSemanticSearch()"
+                            style="padding: 10px 25px;">檢索</button>
+                    </div>
+                    <div id="search-results" class="result-area" style="max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- 10. Ambient -->
+            <div class="card">
+                <div class="card-icon">🌌</div>
+                <div class="card-content">
+                    <h3>生產力氛圍</h3>
+                    <div id="ambient-status"
+                        style="font-size: 0.9rem; color: var(--accent); margin-bottom: 12px; min-height: 1.4rem;">🎶
+                        系統音樂已就緒</div>
+
+                    <div style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px;">專注音樂：</div>
+                    <div class="ambient-grid" style="margin-bottom: 20px;">
+                        <div class="ambient-btn" onclick="playProMusic(0)" title="Lofi Focus">🎧 Lofi</div>
+                        <div class="ambient-btn" onclick="playProMusic(1)" title="Deep Piano">🎹 鋼琴</div>
+                        <div class="ambient-btn" onclick="playProMusic(2)" title="Creative Flow">✨ 創意</div>
+                    </div>
+
+                    <div style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px;">環境音效：</div>
+                    <div class="ambient-grid">
+                        <div class="ambient-btn" onclick="playAmbient('rain')" title="深山大雨">🌧️</div>
+                        <div class="ambient-btn" onclick="playAmbient('forest')" title="晨間森林">🌲</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer style="margin-top:60px; text-align:center; color:var(--text-dim);">
+            &copy; 2026 Desktop-X Pro v5.0 Modular Edition
+        </footer>
+    </main>
+
+    <!-- Modular Script Imports -->
+    <script src="modules/01_dashboard/logic.js"></script>
+    <script src="modules/02_transcriber/logic.js"></script>
+    <script src="modules/03_guardian/logic.js"></script>
+    <script src="modules/04_summarizer/logic.js"></script>
+    <script src="modules/06_semantic_search/logic.js"></script>
+    <script src="modules/07_tasktrack/logic.js"></script>
+    <script src="modules/08_linkdock/logic.js"></script>
+    <script src="modules/09_quotevibe/logic.js"></script>
+    <script src="modules/10_focus_ambient/logic.js"></script>
+</body>
+
+</html>
